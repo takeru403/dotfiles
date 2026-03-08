@@ -1,0 +1,62 @@
+# Ghostty 設定
+
+# フォント
+font-family = Hack Nerd Font Mono
+font-size = 14
+
+# =============================================
+# Neovim 向け Cmd キーマッピング
+#
+# 考え方:
+#   Ctrl 系と競合しないもの → text:\xXX (Ctrl シーケンス直送)
+#   Ctrl 系と競合するもの   → text:\x1bx (ESC+文字 = Neovim 側で <M-x> として受け取る)
+# =============================================
+
+# Cmd+S → Ctrl+S (保存)
+keybind = cmd+s=text:\x13
+
+# Cmd+Z → Ctrl+Z (アンドゥ)
+keybind = cmd+z=text:\x1a
+
+# Cmd+Shift+Z → Ctrl+R (リドゥ)
+keybind = cmd+shift+z=text:\x12
+
+# Cmd+/ → Ctrl+_ (コメントトグル)
+keybind = cmd+slash=text:\x1f
+
+# Cmd+P → <M-p> (ファイル検索)
+keybind = cmd+p=text:\x1bp
+
+# Cmd+F → <M-f> (バッファ内検索)
+keybind = cmd+f=text:\x1bf
+
+# Cmd+Shift+F → <M-g> (グローバル検索)
+keybind = cmd+shift+f=text:\x1bg
+
+# Cmd+Shift+P → <M-c> (コマンドパレット)
+keybind = cmd+shift+p=text:\x1bc
+
+# Cmd+B → <M-e> (ファイルエクスプローラー)
+keybind = cmd+b=text:\x1be
+
+# Cmd+W → <M-w> (バッファを閉じる)
+# ウィンドウを閉じたい場合は Cmd+Shift+W を使う
+keybind = cmd+w=text:\x1bw
+
+# Cmd+D → <M-d> (複数カーソル: 次の同単語を選択)
+keybind = cmd+d=text:\x1bd
+
+# Cmd+Shift+K → <M-K> (行削除)
+keybind = cmd+shift+k=text:\x1bK
+
+# Cmd+. → <M-.> (コードアクション)
+keybind = cmd+period=text:\x1b.
+
+# Cmd+A → <M-a> (全選択)
+keybind = cmd+a=text:\x1ba
+
+# Cmd+\ → <M-\> (縦分割)
+keybind = cmd+backslash=text:\x1b\\
+
+# Cmd+Enter → <C-t> (ターミナルトグル: toggleterm)
+keybind = cmd+enter=text:\x14

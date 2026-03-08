@@ -1,0 +1,84 @@
+[user]
+	name = Takeru Tsuchiya
+	email = takeru.tsuchiya@finatext.com
+
+[init]
+	defaultBranch = main
+
+[color]
+	ui = auto
+	branch = auto
+	diff = auto
+	status = auto
+
+[core]
+	editor = vim
+	autocrlf = input
+	excludesfile = ~/.gitignore_global
+	quotepath = false
+
+[http]
+	postBuffer = 1048576000
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[pull]
+	rebase = false
+
+[branch]
+	autosetupmerge = always
+	autosetuprebase = always
+
+[merge]
+	tool = vimdiff
+
+[diff]
+	tool = vimdiff
+
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	cm = commit
+	ca = commit -a
+	cam = commit -am
+	pl = pull
+	ps = push
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	unstage = reset HEAD --
+	last = log -1 HEAD
+
+[credential]
+	helper =
+	helper = store
+
+[url "https://"]
+	insteadOf = git://
+
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+
+[secrets]
+	providers = git secrets --aws-provider
+	patterns = (A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}
+	patterns = (\"|')?(AWS|aws|Aws)?_?(SECRET|secret|Secret)?_?(ACCESS|access|Access)?_?(KEY|key|Key)(\"|')?\\s*(:|=>|=)\\s*(\"|')?[A-Za-z0-9/\\+=]{40}(\"|')?
+	patterns = (\"|')?(AWS|aws|Aws)?_?(ACCOUNT|account|Account)_?(ID|id|Id)?(\"|')?\\s*(:|=>|=)\\s*(\"|')?[0-9]{4}\\-?[0-9]{4}\\-?[0-9]{4}(\"|')?
+	allowed = AKIAIOSFODNN7EXAMPLE
+	allowed = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+# マシン固有の設定は ~/.gitconfig.local に記述
+[include]
+	path = ~/.gitconfig.local
