@@ -117,6 +117,9 @@ return {
       timeout = 3000,
       render  = "compact",
       stages  = "fade",
+      on_open = function(win)
+        vim.api.nvim_win_set_option(win, "winblend", 20)
+      end,
     },
     config = function(_, opts)
       local notify = require("notify")
@@ -147,7 +150,12 @@ return {
   {
     "stevearc/dressing.nvim",
     event = "VeryLazy",
-    opts  = {},
+    opts  = {
+      select = {
+        -- avante.nvim が list-like でないテーブルを渡すため select は無効化
+        enabled = false,
+      },
+    },
   },
 
   -- TODO / FIXME / NOTE コメントをハイライト
@@ -181,6 +189,13 @@ return {
         command_palette       = true,
         long_message_to_split = true,
         lsp_doc_border        = true,
+      },
+      -- ポップアップの透過（0=不透明 〜 100=完全透明）
+      views = {
+        notify          = { win_options = { winblend = 70 } },
+        popup           = { win_options = { winblend = 70 } },
+        hover           = { win_options = { winblend = 70 } },
+        confirm         = { win_options = { winblend = 70 } },
       },
     },
   },

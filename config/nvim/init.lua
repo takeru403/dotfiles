@@ -30,6 +30,11 @@ opt.sidescrolloff = 8
 opt.splitright    = true
 opt.splitbelow    = true
 
+-- 不可文字可視化
+-- 参考：https://zenn.dev/arrow2nd/articles/aa2605c67efdb0
+opt.list= true
+opt.listchars = {tab = '>>', trail = '-', nbsp = '+'}
+
 -- 検索
 opt.ignorecase = true
 opt.smartcase  = true

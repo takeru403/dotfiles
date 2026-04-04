@@ -1,4 +1,4 @@
--- エディタ支援: autopairs / Comment / surround / gitsigns / toggleterm / trouble
+-- エディタ支援: autopairs / Comment / surround / toggleterm / trouble
 return {
 
   -- vim と tmux のペイン移動を Ctrl+hjkl で統一
@@ -69,45 +69,6 @@ return {
     opts    = {},
   },
 
-  -- Git の変更をガターに表示
-  {
-    "lewis6991/gitsigns.nvim",
-    event = "BufReadPre",
-    opts  = {
-      signs = {
-        add          = { text = "▎" },
-        change       = { text = "▎" },
-        delete       = { text = "" },
-        topdelete    = { text = "" },
-        changedelete = { text = "▎" },
-        untracked    = { text = "┆" },
-      },
-      word_diff  = true,
-      linehl     = true,
-      numhl      = true,
-      current_line_blame = true,
-      current_line_blame_opts = {
-        delay        = 100,
-        virt_text_pos = "eol",
-      },
-      on_attach = function(bufnr)
-        local gs   = package.loaded.gitsigns
-        local map  = vim.keymap.set
-        local opts = function(desc) return { buffer = bufnr, desc = desc } end
-
-        map("n", "]h", gs.next_hunk,            opts("Next hunk"))
-        map("n", "[h", gs.prev_hunk,            opts("Prev hunk"))
-        map("n", "<Leader>hs", gs.stage_hunk,   opts("Stage hunk"))
-        map("n", "<Leader>hr", gs.reset_hunk,   opts("Reset hunk"))
-        map("n", "<Leader>hS", gs.stage_buffer, opts("Stage buffer"))
-        map("n", "<Leader>hR", gs.reset_buffer, opts("Reset buffer"))
-        map("n", "<Leader>hp", gs.preview_hunk, opts("Preview hunk"))
-        map("n", "<Leader>hb", gs.blame_line,   opts("Blame line"))
-        map("n", "<Leader>hd", gs.diffthis,     opts("Diff this"))
-      end,
-    },
-  },
-
   -- 統合ターミナル（Cmd+Enter / <C-t> でトグル）
   {
     "akinsho/toggleterm.nvim",
@@ -166,14 +127,46 @@ return {
     end,
   },
 
-  -- Markdown プレビュー（Mermaid 対応）
+  -- フォーマッタ（prettier 等）
+  {
+    "stevearc/conform.nvim",
+    event = "BufWritePre",
+    cmd = { "ConformInfo" },
+    keys = {
+      { "<Leader>cf", function() require("conform").format({ async = true }) end, desc = "Format" },
+    },
+    opts = {
+      formatters_by_ft = {
+        html       = { "prettier" },
+        css        = { "prettier" },
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        json       = { "prettier" },
+        yaml       = { "prettier" },
+        markdown   = { "prettier" },
+      },
+      format_on_save = {
+        timeout_ms = 3000,
+        lsp_format = "fallback",
+      },
+    },
+  },
+
+  -- Markdown プレビュー（Mermaid / HTML 対応）
   {
     "iamcco/markdown-preview.nvim",
-    cmd   = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-    ft    = { "markdown" },
-    build = function() vim.fn["mkdp#util#install"]() end,
-    keys  = {
-      { "<Leader>mp", "<cmd>MarkdownPreviewToggle<CR>", ft = "markdown", desc = "Markdown preview toggle" },
+    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+    ft = { "markdown", "html" },
+    build = function()
+      require("lazy").load({ plugins = { "markdown-preview.nvim" } })
+      vim.fn["mkdp#util#install"]()
+    end,
+    init = function()
+      vim.g.mkdp_filetypes = { "markdown", "html" }
+      vim.g.mkdp_command_for_global = 1
+    end,
+    keys = {
+      { "<Leader>md", "<cmd>MarkdownPreviewToggle<CR>", desc = "Markdown/HTML preview toggle" },
     },
   },
 }

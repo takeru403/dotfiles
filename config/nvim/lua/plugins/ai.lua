@@ -7,6 +7,13 @@ return {
     version = false,
     build   = "make",
     init = function()
+      -- avante が on_choice=nil で vim.ui.select を呼ぶバグを回避
+      local orig_select = vim.ui.select
+      vim.ui.select = function(items, opts, on_choice)
+        if type(on_choice) ~= "function" then return end
+        orig_select(items, opts, on_choice)
+      end
+
       -- AWS SigV4 対応 curl 8.10.0+ を優先するため PATH に追加
       local brew_curl = "/opt/homebrew/opt/curl/bin"
       if not vim.env.PATH:find(brew_curl, 1, true) then
@@ -18,9 +25,12 @@ return {
       if not vim.env.AWS_DEFAULT_REGION then
         vim.env.AWS_DEFAULT_REGION = "ap-northeast-1"
       end
+      -- Bedrock は API キー不要なのでログイン済みフラグを立てておく
+      vim.g.avante_login = true
     end,
     opts = {
       provider = "bedrock",
+      auto_suggestions_provider = "bedrock",
       providers = {
         bedrock = {
           model = "global.anthropic.claude-sonnet-4-6",
@@ -31,7 +41,7 @@ return {
         },
       },
       behaviour = {
-        auto_suggestions                 = false,
+        auto_suggestions                 = true,
         auto_set_highlight_group         = true,
         auto_set_keymaps                 = true,
         auto_apply_diff_after_generation = false,
@@ -70,6 +80,7 @@ return {
           incoming = "DiffAdd",
         },
       },
+      input = { provider = "dressing" },
     },
     dependencies = {
       "nvim-treesitter/nvim-treesitter",

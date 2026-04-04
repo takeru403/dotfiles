@@ -76,12 +76,12 @@ return {
         signs            = true,
         underline        = true,
         update_in_insert = false,
-        float            = { border = "rounded", source = "always" },
+        float            = { border = "rounded", source = "always", winblend = 20 },
         severity_sort    = true,
       })
 
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-        vim.lsp.handlers.hover, { border = "rounded" }
+        vim.lsp.handlers.hover, { border = "rounded", winblend = 20 }
       )
 
       local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
