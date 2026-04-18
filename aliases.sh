@@ -65,9 +65,12 @@ alias poetry-add="poetry add"
 # ===============================
 # ファイル / ディレクトリ操作
 # ===============================
-alias ll="ls -la"
-alias la="ls -A"
-alias l="ls -CF"
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -la --icons --git --group-directories-first"
+alias la="eza -A --icons --group-directories-first"
+alias l="eza -F --icons --group-directories-first"
+alias lt="eza --tree --icons --level=2"
+alias tree="tre"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
@@ -78,7 +81,8 @@ alias ....="cd ../../.."
 alias serve="python3 -m http.server 8000"
 alias ports="lsof -i -P -n | grep LISTEN"
 alias psg="ps aux | grep"
-alias du1="du -h -d 1"
+alias du="dust"
+alias du1="dust -d 1"
 
 # Docker
 alias d="docker"
@@ -123,4 +127,66 @@ project_stats() {
   echo "Files:   $(find . -type f | wc -l)"
   echo "Commits: $(git rev-list --all --count 2>/dev/null || echo '0')"
   echo "Last:    $(git log -1 --format=%cd 2>/dev/null || echo 'N/A')"
+}
+
+# ===============================
+# Obsidian
+# ===============================
+export OBSIDIAN_VAULT="$HOME/Documents/Obsidian Vault"
+
+# 今日のデイリーノートを表示
+obs-today() {
+  local today=$(date +%Y-%m-%d)
+  local file="$OBSIDIAN_VAULT/${today}.md"
+  if [[ -f "$file" ]]; then
+    if command -v bat &>/dev/null; then
+      bat --style=plain --language=markdown "$file"
+    else
+      cat "$file"
+    fi
+  else
+    echo "今日のノートがありません: $file"
+    echo "作成しますか？ (y/N): "
+    read -r response
+    [[ "$response" =~ ^[Yy]$ ]] && echo "# ${today}\n\n" > "$file" && nvim "$file"
+  fi
+}
+
+# fzf でノートを検索してbatでプレビュー・nvimで開く
+obs-find() {
+  local file
+  local previewer='cat {}'
+  command -v bat &>/dev/null && previewer='bat --style=plain --color=always --language=markdown {}'
+  file=$(find "$OBSIDIAN_VAULT" -name "*.md" | fzf \
+    --preview "$previewer" \
+    --preview-window=right:60%)
+  [[ -n "$file" ]] && nvim "$file"
+}
+
+# 今日のデイリーノートに1行追記
+obs-append() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: obs-append <メモ内容>"
+    return 1
+  fi
+  local today=$(date +%Y-%m-%d)
+  local file="$OBSIDIAN_VAULT/${today}.md"
+  [[ ! -f "$file" ]] && echo "# ${today}\n" > "$file"
+  echo "$1" >> "$file"
+  echo "追記しました → $file"
+}
+
+# キーワードでノート内容を全文検索してfzfで選択
+obs-grep() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: obs-grep <keyword>"
+    return 1
+  fi
+  local file
+  local previewer='cat {}'
+  command -v bat &>/dev/null && previewer='bat --style=plain --color=always --language=markdown {}'
+  file=$(grep -rl "$1" "$OBSIDIAN_VAULT" --include="*.md" | fzf \
+    --preview "$previewer" \
+    --preview-window=right:60%)
+  [[ -n "$file" ]] && nvim "$file"
 }

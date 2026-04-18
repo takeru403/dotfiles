@@ -163,9 +163,11 @@ alias vim="nvim"
 alias view="nvim -R"
 alias zshconfig="vim ~/.zshrc"
 
-alias ll="ls -la"
-alias la="ls -A"
-alias l="ls -CF"
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -la --icons --git --group-directories-first"
+alias la="eza -A --icons --group-directories-first"
+alias l="eza -F --icons --group-directories-first"
+alias lt="eza --tree --icons --level=2"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
@@ -204,6 +206,24 @@ function gq() {
 }
 
 # ===============================
+# tmux ラッパー（引数なし = 使い捨て、引数あり = そのまま）
+# ===============================
+function tmux() {
+  if [[ $# -eq 0 ]]; then
+    command tmux new-session -s "tmp_$$" \; set-option destroy-unattached on
+  else
+    command tmux "$@"
+  fi
+}
+
+# ===============================
 # ローカル設定（マシン固有の設定はこちらに）
 # ===============================
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+eval "$(/opt/homebrew/bin/mise activate zsh)"
+
+
+tre() { command tre "$@" -e && source "/tmp/tre_aliases_$USER" 2>/dev/null; }
+eval "$(zoxide init zsh --cmd cd)"
+

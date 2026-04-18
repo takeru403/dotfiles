@@ -81,7 +81,7 @@ return {
       })
 
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-        vim.lsp.handlers.hover, { border = "rounded", winblend = 20 }
+        vim.lsp.handlers.hover, { border = "rounded" }
       )
 
       local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }

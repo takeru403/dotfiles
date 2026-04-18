@@ -194,7 +194,7 @@ return {
       views = {
         notify          = { win_options = { winblend = 70 } },
         popup           = { win_options = { winblend = 70 } },
-        hover           = { win_options = { winblend = 70 } },
+        hover           = { win_options = { winblend = 0 } },
         confirm         = { win_options = { winblend = 70 } },
       },
     },
