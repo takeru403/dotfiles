@@ -11,6 +11,18 @@ return {
         cond  = function() return vim.fn.executable("make") == 1 end,
       },
     },
+    keys = {
+      { "<Leader>ff", "<cmd>Telescope find_files<cr>",            desc = "Find files" },
+      { "<Leader>fg", "<cmd>Telescope live_grep<cr>",             desc = "Live grep" },
+      { "<Leader>fb", "<cmd>Telescope buffers<cr>",               desc = "Find buffers" },
+      { "<Leader>fr", "<cmd>Telescope oldfiles<cr>",              desc = "Recent files" },
+      { "<Leader>fs", "<cmd>Telescope lsp_document_symbols<cr>",  desc = "Document symbols" },
+      { "<Leader>fS", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "Workspace symbols" },
+      { "<Leader>fc", "<cmd>Telescope commands<cr>",              desc = "Commands" },
+      { "<Leader>gc", "<cmd>Telescope git_commits<cr>",           desc = "Git commits" },
+      { "<M-g>",      "<cmd>Telescope live_grep<cr>",             desc = "Live grep (Cmd+Shift+F)" },
+      { "<Leader>fw", "<cmd>Telescope grep_string<cr>",           desc = "Grep word under cursor" },
+    },
     config = function()
       local telescope = require("telescope")
       local actions   = require("telescope.actions")
@@ -57,6 +69,7 @@ return {
       map("n", "<Leader>fS", builtin.lsp_workspace_symbols,  { desc = "Workspace symbols" })
       map("n", "<Leader>fc", builtin.commands,                { desc = "Commands" })
       map("n", "<Leader>gc", builtin.git_commits,             { desc = "Git commits" })
+      map("n", "<M-g>", builtin.live_grep,                { desc = "Live grep (Cmd+Shift+F)" })
       map("n", "<Leader>fw", function()
         builtin.grep_string({ search = vim.fn.expand("<cword>") })
       end, { desc = "Grep word under cursor" })

@@ -23,6 +23,8 @@ return {
         "jsonls",      -- JSON
         "yamlls",      -- YAML
         "terraformls", -- Terraform
+        "clangd",      -- C / C++
+        "emmet_ls",    -- HTML/CSS Emmet 展開
       },
       automatic_installation = true,
     },
@@ -119,7 +121,7 @@ return {
       })
 
       vim.lsp.enable({
-        "pyright", "ruff", "lua_ls", "ts_ls", "bashls", "jsonls", "yamlls", "terraformls",
+        "pyright", "ruff", "lua_ls", "ts_ls", "bashls", "jsonls", "yamlls", "terraformls", "emmet_ls", "clangd",
       })
     end,
   },

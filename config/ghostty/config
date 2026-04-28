@@ -30,8 +30,8 @@ keybind = cmd+p=text:\x1bp
 # Cmd+F → <M-f> (バッファ内検索)
 keybind = cmd+f=text:\x1bf
 
-# Cmd+Shift+F → <M-g> (グローバル検索)
-keybind = cmd+shift+f=text:\x1bg
+# Cmd+Shift+G → <M-g> (グローバル検索 / live grep)
+keybind = cmd+shift+g=text:\x1bg
 
 # Cmd+Shift+P → <M-c> (コマンドパレット)
 keybind = cmd+shift+p=text:\x1bc

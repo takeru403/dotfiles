@@ -5,3 +5,4 @@ PS1='\u \$'
 
 # エイリアス
 alias rm='rm -i'
+. "$HOME/.cargo/env"
