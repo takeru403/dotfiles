@@ -22,6 +22,16 @@ return {
         ["gs"]    = "actions.change_sort",
         ["gx"]    = "actions.open_external",
         ["g."]    = "actions.toggle_hidden",
+        ["yp"]    = {
+          desc = "Yank full path",
+          callback = function()
+            local oil = require("oil")
+            local entry = oil.get_cursor_entry()
+            local path = oil.get_current_dir() .. (entry and entry.name or "")
+            vim.fn.setreg("+", path)
+            vim.notify("copied: " .. path)
+          end,
+        },
       },
       use_default_keymaps = false,
       view_options = {

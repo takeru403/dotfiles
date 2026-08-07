@@ -4,6 +4,16 @@
 font-family = Hack Nerd Font Mono
 font-size = 14
 
+# Option キーを Alt (Meta) として送信（tmux の M-v などで必要）
+macos-option-as-alt = true
+
+# 背景壁紙 (Vim ショートカット)
+# 重さの原因になっていたため一時的に無効化
+# background-image = /Users/takeru.tsuchiya/Desktop/vim_shortcut_wallpaper/vim-shortcuts-dark_2560x1600.png
+# background-image-opacity = 0.15
+# background-image-position = center
+# background-image-fit = contain
+
 # =============================================
 # Neovim 向け Cmd キーマッピング
 #
@@ -60,3 +70,5 @@ keybind = cmd+backslash=text:\x1b\\
 
 # Cmd+Enter → <C-t> (ターミナルトグル: toggleterm)
 keybind = cmd+enter=text:\x14
+
+keybind = physical:intlyen=text:\\

@@ -18,7 +18,8 @@ return {
         "pyright",     -- Python (型チェック)
         "ruff",        -- Python (linter / formatter)
         "lua_ls",      -- Lua
-        "ts_ls",       -- TypeScript / JavaScript
+        "vtsls",       -- TypeScript / JavaScript (VSCode 互換)
+        "eslint",      -- ESLint (JS/TS linter)
         "bashls",      -- Bash
         "jsonls",      -- JSON
         "yamlls",      -- YAML
@@ -48,8 +49,21 @@ return {
           local map   = vim.keymap.set
           local opts  = function(desc) return { buffer = bufnr, desc = desc } end
 
-          map("n", "gd",         vim.lsp.buf.definition,      opts("Go to definition"))
-          map("n", "<F12>",      vim.lsp.buf.definition,      opts("Go to definition (F12)"))
+          local function goto_definition()
+            local cli = vim.lsp.get_clients({ bufnr = bufnr })[1]
+            local enc = cli and cli.offset_encoding or "utf-16"
+            local params = vim.lsp.util.make_position_params(0, enc)
+            vim.lsp.buf_request(bufnr, "textDocument/definition", params, function(_, result)
+              if not result or vim.tbl_isempty(result) then
+                vim.notify("No definition found", vim.log.levels.INFO)
+                return
+              end
+              local target = vim.islist(result) and result[1] or result
+              vim.lsp.util.show_document(target, enc, { focus = true })
+            end)
+          end
+          map("n", "gd",    goto_definition, opts("Go to definition"))
+          map("n", "<F12>", goto_definition, opts("Go to definition (F12)"))
           map("n", "gD",         vim.lsp.buf.declaration,     opts("Go to declaration"))
           map("n", "gi",         vim.lsp.buf.implementation,  opts("Go to implementation"))
           map("n", "gt",         vim.lsp.buf.type_definition, opts("Go to type definition"))
@@ -57,8 +71,61 @@ return {
           map("n", "<S-F12>", function()
             require("telescope.builtin").lsp_references()
           end, opts("Find references (Shift+F12)"))
-          map("n", "K",          vim.lsp.buf.hover,           opts("Hover docs"))
+          map("n", "K", function()
+            local ok, ufo = pcall(require, "ufo")
+            if ok then
+              local winid = ufo.peekFoldedLinesUnderCursor()
+              if winid then return end
+            end
+            vim.lsp.buf.hover({
+              border     = "rounded",
+              max_width  = 100,
+              max_height = 30,
+              focusable  = true,
+            })
+          end, opts("Peek fold / Hover docs"))
           map("i", "<C-k>",      vim.lsp.buf.signature_help,  opts("Signature help"))
+
+          -- カーソル下のシンボル + LSP hover を Avante に投げて解説してもらう
+          map({ "n", "v" }, "<Leader>ak", function()
+            local mode   = vim.fn.mode()
+            local symbol
+            if mode == "v" or mode == "V" or mode == "\22" then
+              vim.cmd('noautocmd normal! "vy')
+              symbol = vim.fn.getreg("v")
+            else
+              symbol = vim.fn.expand("<cword>")
+            end
+            local ft     = vim.bo.filetype
+            local client = vim.lsp.get_clients({ bufnr = bufnr })[1]
+            local enc    = client and client.offset_encoding or "utf-16"
+            local params = vim.lsp.util.make_position_params(0, enc)
+
+            vim.lsp.buf_request(bufnr, "textDocument/hover", params, function(_, result)
+              local hover_md = ""
+              if result and result.contents then
+                local lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+                hover_md = table.concat(lines, "\n")
+              end
+              local prompt = table.concat({
+                "以下の " .. ft .. " のシンボル `" .. symbol .. "` について、",
+                "型・役割・主要な属性/メソッド・使い方の例を日本語で説明してください。",
+                "",
+                "### LSP hover 情報",
+                "```markdown",
+                hover_md ~= "" and hover_md or "(hover 情報なし)",
+                "```",
+              }, "\n")
+
+              local ok, avante_api = pcall(require, "avante.api")
+              if ok and avante_api.ask then
+                avante_api.ask({ question = prompt })
+              else
+                vim.cmd("AvanteAsk")
+                vim.defer_fn(function() vim.api.nvim_paste(prompt, false, -1) end, 100)
+              end
+            end)
+          end, opts("Ask LLM about symbol (with hover)"))
           map("n", "<F2>",       vim.lsp.buf.rename,          opts("Rename symbol (F2)"))
           map("n", "<Leader>rn", vim.lsp.buf.rename,          opts("Rename symbol"))
           map("n", "<M-.>",      vim.lsp.buf.code_action,     opts("Code action (Cmd+.)"))
@@ -67,9 +134,31 @@ return {
           map("n", "<Leader>lf", function()
             vim.lsp.buf.format({ async = true })
           end, opts("Format"))
+          map("n", "<Leader>uh", function()
+            local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+            vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+          end, opts("Toggle inlay hints"))
+
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          if client and client:supports_method("textDocument/inlayHint") then
+            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+          end
+
           map("n", "<Leader>d", vim.diagnostic.open_float, opts("Show diagnostic"))
           map("n", "[d",        vim.diagnostic.goto_prev,  opts("Prev diagnostic"))
           map("n", "]d",        vim.diagnostic.goto_next,  opts("Next diagnostic"))
+          map("n", "<Leader>li", "<cmd>checkhealth vim.lsp<CR>", opts("LSP info (checkhealth)"))
+          map("n", "<Leader>lR", "<cmd>LspRestart<CR>",          opts("LSP restart"))
+          map("n", "<Leader>lc", function()
+            local clients = vim.lsp.get_clients({ bufnr = 0 })
+            if #clients == 0 then
+              vim.notify("No LSP clients attached", vim.log.levels.WARN)
+              return
+            end
+            for _, c in ipairs(clients) do
+              vim.notify(string.format("%s (id=%d) root=%s", c.name, c.id, c.config.root_dir or "?"))
+            end
+          end, opts("LSP clients (current buffer)"))
         end,
       })
 
@@ -82,9 +171,10 @@ return {
         severity_sort    = true,
       })
 
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-        vim.lsp.handlers.hover, { border = "rounded" }
-      )
+      vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+        config = vim.tbl_deep_extend("force", config or {}, { border = "rounded" })
+        vim.lsp.handlers.hover(err, result, ctx, config)
+      end
 
       local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
       for type, icon in pairs(signs) do
@@ -114,6 +204,44 @@ return {
         },
       })
 
+      local ts_inlay_hints = {
+        includeInlayParameterNameHints                        = "all",
+        includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+        includeInlayFunctionParameterTypeHints                = true,
+        includeInlayVariableTypeHints                         = true,
+        includeInlayPropertyDeclarationTypeHints              = true,
+        includeInlayFunctionLikeReturnTypeHints               = true,
+        includeInlayEnumMemberValueHints                      = true,
+      }
+
+      vim.lsp.config("vtsls", {
+        settings = {
+          typescript = {
+            inlayHints    = ts_inlay_hints,
+            tsserver      = { maxTsServerMemory = 8192 },
+            preferences   = { includePackageJsonAutoImports = "on" },
+          },
+          javascript = { inlayHints = ts_inlay_hints },
+          vtsls = {
+            experimental = {
+              completion = { enableServerSideFuzzyMatch = true },
+            },
+          },
+        },
+        on_attach = function(client, bufnr)
+          local ok, tq = pcall(require, "twoslash-queries")
+          if ok then tq.attach(client, bufnr) end
+
+          vim.keymap.set("n", "gS", function()
+            local params = vim.lsp.util.make_position_params(0, client.offset_encoding)
+            client:exec_cmd({
+              command   = "typescript.goToSourceDefinition",
+              arguments = { params.textDocument.uri, params.position },
+            }, { bufnr = bufnr })
+          end, { buffer = bufnr, desc = "TS: Go to source definition" })
+        end,
+      })
+
       vim.lsp.config("yamlls", {
         settings = {
           yaml = { schemaStore = { enable = true } },
@@ -121,7 +249,17 @@ return {
       })
 
       vim.lsp.enable({
-        "pyright", "ruff", "lua_ls", "ts_ls", "bashls", "jsonls", "yamlls", "terraformls", "emmet_ls", "clangd",
+        "pyright", "ruff", "lua_ls", "vtsls", "eslint", "bashls", "jsonls", "yamlls", "terraformls", "emmet_ls", "clangd",
+      })
+
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        pattern = { "*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs" },
+        callback = function(ev)
+          local clients = vim.lsp.get_clients({ bufnr = ev.buf, name = "eslint" })
+          if #clients > 0 then
+            vim.cmd("LspEslintFixAll")
+          end
+        end,
       })
     end,
   },
@@ -151,7 +289,10 @@ return {
         },
         window = {
           completion    = cmp.config.window.bordered(),
-          documentation = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered({ max_width = 100, max_height = 30 }),
+        },
+        view = {
+          docs = { auto_open = true },
         },
         mapping = cmp.mapping.preset.insert({
           ["<C-k>"]     = cmp.mapping.select_prev_item(),
@@ -215,4 +356,52 @@ return {
       })
     end,
   },
+
+  -- シンボルアウトライン（VSCode の左ペイン「アウトライン」相当）
+  {
+    "hedyhli/outline.nvim",
+    cmd  = { "Outline", "OutlineOpen" },
+    keys = { { "<leader>o", "<cmd>Outline<cr>", desc = "Toggle outline" } },
+    opts = {
+      outline_window = { width = 25, relative_width = true },
+    },
+  },
+
+  -- 入力中に関数シグネチャを常時表示
+  {
+    "ray-x/lsp_signature.nvim",
+    event = "LspAttach",
+    opts  = {
+      hint_enable     = false,
+      floating_window = true,
+      handler_opts    = { border = "rounded" },
+    },
+  },
+
+  -- 定義/参照を浮動ウィンドウでプレビュー
+  {
+    "dnlhc/glance.nvim",
+    cmd  = "Glance",
+    keys = {
+      { "gpd", "<cmd>Glance definitions<cr>",      desc = "Peek definitions" },
+      { "gpr", "<cmd>Glance references<cr>",       desc = "Peek references" },
+      { "gpt", "<cmd>Glance type_definitions<cr>", desc = "Peek type definitions" },
+      { "gpi", "<cmd>Glance implementations<cr>",  desc = "Peek implementations" },
+    },
+    opts = { border = { enable = true } },
+  },
+
+  -- TypeScript のエラーメッセージを読みやすく翻訳
+  {
+    "dmmulroy/ts-error-translator.nvim",
+    ft   = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+    opts = {},
+  },
+
+  -- TS の型を `// ^?` でフル展開表示
+  {
+    "marilari88/twoslash-queries.nvim",
+    ft = { "typescript", "typescriptreact" },
+  },
+
 }
