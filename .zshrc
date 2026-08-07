@@ -26,6 +26,7 @@ plugins=(
   python
   zsh-syntax-highlighting
   zsh-autosuggestions
+  zsh-vi-mode
 )
 source $ZSH/oh-my-zsh.sh
 
@@ -44,43 +45,9 @@ source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 # [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # ===============================
-# pyenv
-# ===============================
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init --no-rehash -)"
-fi
-eval "$(pyenv virtualenv-init -)"
-export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-
-# ===============================
-# Node.js (NVM) - 遅延ロード
-# ===============================
-export NVM_DIR="$HOME/.nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-  _nvm_load() {
-    unset -f nvm node npm npx _nvm_load
-    \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  }
-  nvm()  { _nvm_load; nvm  "$@"; }
-  node() { _nvm_load; node "$@"; }
-  npm()  { _nvm_load; npm  "$@"; }
-  npx()  { _nvm_load; npx  "$@"; }
-fi
-
-# ===============================
-# Volta (Node.js)
-# ===============================
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
-
-# ===============================
 # aqua (CLI バージョン管理)
 # ===============================
 export PATH="$HOME/.aqua/bin:$PATH"
-eval "$(aqua init -)"
 export PATH="$(aqua root-dir)/bin:$PATH"
 
 # ===============================
@@ -89,22 +56,6 @@ export PATH="$(aqua root-dir)/bin:$PATH"
 if [[ -d "/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home" ]]; then
   export JAVA_HOME="/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home"
   export PATH="$JAVA_HOME/bin:$PATH"
-fi
-
-# ===============================
-# Conda（存在する場合のみ）
-# ===============================
-CONDA_PATH="$HOME/anaconda3"
-if [[ -f "$CONDA_PATH/bin/conda" ]]; then
-  __conda_setup="$('$CONDA_PATH/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-  if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-  elif [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
-    . "$CONDA_PATH/etc/profile.d/conda.sh"
-  else
-    export PATH="$CONDA_PATH/bin:$PATH"
-  fi
-  unset __conda_setup
 fi
 
 # ===============================
@@ -221,9 +172,12 @@ function tmux() {
 # ===============================
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
-eval "$(/opt/homebrew/bin/mise activate zsh)"
 
 
 tre() { command tre "$@" -e && source "/tmp/tre_aliases_$USER" 2>/dev/null; }
 eval "$(zoxide init zsh --cmd cd)"
 
+export KIBELA_TOKEN=secret/AT/NDQ3NQ/yrVtlOXE7__VoJRqZif43JiYopEKDhPa74MHPdjMSFs
+export KIBELA_TEAM=finatextgroup
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi

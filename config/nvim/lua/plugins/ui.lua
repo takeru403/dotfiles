@@ -183,6 +183,8 @@ return {
           ["vim.lsp.util.stylize_markdown"]                = true,
           ["cmp.entry.get_documentation"]                  = true,
         },
+        hover     = { enabled = true },
+        signature = { enabled = true },
       },
       presets = {
         bottom_search         = true,

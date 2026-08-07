@@ -155,17 +155,42 @@ return {
     },
 
     -- Markdown プレビュー（Mermaid / HTML 対応）
+    -- mkdp のコマンドは -buffer 定義 + BufEnter 登録のため、lazy-load 直後の
+    -- カレントバッファではコマンドが未登録になる。lazy=false で起動時にロードする。
+    --
+    -- .mmd (raw mermaid) は mkdp が直接扱えないため、<Leader>md を押したら
+    -- mermaid フェンスで包んだ一時 .md を作ってそちらをプレビューする。
     {
         "iamcco/markdown-preview.nvim",
-        cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-        ft = { "markdown", "html" },
+        lazy = false,
         build = function()
-            require("lazy").load({ plugins = { "markdown-preview.nvim" } })
             vim.fn["mkdp#util#install"]()
         end,
         init = function()
             vim.g.mkdp_filetypes = { "markdown", "html" }
             vim.g.mkdp_command_for_global = 1
+        end,
+        config = function()
+            local function preview_mermaid()
+                local src = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+                local tmp = vim.fn.tempname() .. ".md"
+                local wrapped = { "```mermaid" }
+                vim.list_extend(wrapped, src)
+                table.insert(wrapped, "```")
+                vim.fn.writefile(wrapped, tmp)
+                vim.cmd("edit " .. vim.fn.fnameescape(tmp))
+                vim.cmd("MarkdownPreview")
+            end
+            vim.api.nvim_create_user_command("MermaidPreview", preview_mermaid, {})
+
+            vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+                pattern = "*.mmd",
+                callback = function()
+                    vim.bo.filetype = "mermaid"
+                    vim.keymap.set("n", "<Leader>md", "<cmd>MermaidPreview<CR>",
+                        { buffer = true, desc = "Mermaid preview" })
+                end,
+            })
         end,
         keys = {
             { "<Leader>md", "<cmd>MarkdownPreviewToggle<CR>", desc = "Markdown/HTML preview toggle" },
@@ -184,6 +209,66 @@ return {
             max_width = 100,
             max_height = 30,
         },
+    },
+
+    -- Mermaid (.mmd) / Markdown 内の mermaid ブロックをインラインプレビュー
+    {
+        "3rd/diagram.nvim",
+        dependencies = { "3rd/image.nvim" },
+        ft = { "markdown", "mermaid" },
+        init = function()
+            -- .mmd / .mermaid を mermaid filetype として認識
+            vim.filetype.add({
+                extension = {
+                    mmd = "mermaid",
+                    mermaid = "mermaid",
+                },
+            })
+        end,
+        opts = function()
+            return {
+                renderer_options = {
+                    mermaid = {
+                        background = "transparent",
+                        theme      = "forest",
+                        scale      = 2,
+                    },
+                },
+                integrations = {
+                    require("diagram.integrations.markdown"),
+                    require("diagram.integrations.neorg"),
+                },
+            }
+        end,
+    },
+
+    -- 高機能な折りたたみ（LSP / Treesitter ベース）
+    {
+        "kevinhwang91/nvim-ufo",
+        dependencies = { "kevinhwang91/promise-async" },
+        event = "BufReadPost",
+        init = function()
+            -- ufo は大きい foldlevel を要求する
+            vim.o.foldcolumn     = "1"
+            vim.o.foldlevel      = 99
+            vim.o.foldlevelstart = 99
+            vim.o.foldenable     = true
+            vim.o.fillchars      = "eob: ,fold: ,foldopen:-,foldsep: ,foldclose:+"
+        end,
+        config = function()
+            local ufo = require("ufo")
+            ufo.setup({
+                provider_selector = function(_, _, _)
+                    return { "treesitter", "indent" }
+                end,
+            })
+            local map = vim.keymap.set
+            map("n", "zR", ufo.openAllFolds, { desc = "UFO: open all folds" })
+            map("n", "zM", ufo.closeAllFolds, { desc = "UFO: close all folds" })
+            map("n", "zr", ufo.openFoldsExceptKinds, { desc = "UFO: open folds except kinds" })
+            map("n", "zm", ufo.closeFoldsWith, { desc = "UFO: close folds with level" })
+            -- peek は K（lsp.lua）に統合: 折りたたみ行で K → peek、それ以外 → hover
+        end,
     },
 
     -- クリップボードの画像をファイルに保存して貼り付け（<Leader>p）

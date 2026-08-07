@@ -27,7 +27,6 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'preservim/nerdtree'
 Plug 'junegunn/fzf.vim'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'vim-airline/vim-airline'
 
 call plug#end()
@@ -35,7 +34,7 @@ call plug#end()
 " ===============================
 " 外部ファイル変更の自動検知
 " ===============================
-set autoread
+set autoreload
 autocmd FocusGained,BufEnter * checktime
 
 " ===============================
