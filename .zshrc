@@ -177,7 +177,5 @@ export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
 tre() { command tre "$@" -e && source "/tmp/tre_aliases_$USER" 2>/dev/null; }
 eval "$(zoxide init zsh --cmd cd)"
 
-export KIBELA_TOKEN=secret/AT/NDQ3NQ/yrVtlOXE7__VoJRqZif43JiYopEKDhPa74MHPdjMSFs
-export KIBELA_TEAM=finatextgroup
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
